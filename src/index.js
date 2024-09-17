@@ -27,7 +27,7 @@ const commitId = process.env.GITHUB_SHA || "";
 // Load transformations and libraries from a local meta file.
 function getTransformationsAndLibrariesFromLocal() {
   core.info(
-    `Loading transformations and libraries from the meta file: ${metaFilePath}`
+    `Loading transformations and libraries from the meta file: ${metaFilePath}`,
   );
   const transformations = [];
   const libraries = [];
@@ -84,7 +84,7 @@ async function upsertTransformations(transformations, transformationNameToId) {
         tr.name,
         tr.description,
         code,
-        tr.language
+        tr.language,
       );
     } else {
       core.info(`Creating transformation: ${tr.name}`);
@@ -93,7 +93,7 @@ async function upsertTransformations(transformations, transformationNameToId) {
         tr.name,
         tr.description,
         code,
-        tr.language
+        tr.language,
       );
     }
     transformationDict[res.data.versionId] = { ...tr, id: res.data.id };
@@ -140,7 +140,7 @@ async function buildTestSuite(transformationDict, libraryDict) {
       transformationTest.push({ versionId: trVersionId, testInput });
     } else {
       core.info(
-        `No test input provided. Testing ${transformationDict[trVersionId].name} with default payload`
+        `No test input provided. Testing ${transformationDict[trVersionId].name} with default payload`,
       );
       transformationTest.push({ versionId: trVersionId });
     }
@@ -152,10 +152,10 @@ async function buildTestSuite(transformationDict, libraryDict) {
 
   core.info(
     `Final transformation versions to be tested:
-    ${JSON.stringify(transformationTest)}`
+    ${JSON.stringify(transformationTest)}`,
   );
   core.info(
-    `Final library versions to be tested: ${JSON.stringify(librariesTest)}`
+    `Final library versions to be tested: ${JSON.stringify(librariesTest)}`,
   );
   return { transformationTest, librariesTest };
 }
@@ -166,14 +166,14 @@ async function runTestSuite(transformationTest, librariesTest) {
 
   let res = await testTransformationAndLibrary(
     transformationTest,
-    librariesTest
+    librariesTest,
   );
 
   logResult(res.data.result);
 
   if (res.data.result.failedTestResults.length > 0) {
     throw new Error(
-      "Failures occured while running tests against input events"
+      "Failures occured while running tests against input events",
     );
   }
 
@@ -193,7 +193,7 @@ async function compareOutput(successResults, transformationDict) {
     }
     if (!transformationDict.hasOwnProperty(transformerVersionID)) {
       core.warn(
-        `Transformer with version id: ${transformerVersionID} not found.`
+        `Transformer with version id: ${transformerVersionID} not found.`,
       );
       continue;
     }
@@ -204,15 +204,15 @@ async function compareOutput(successResults, transformationDict) {
 
     fs.writeFileSync(
       `${testOutputDir}/${transformationHandleName}_output.json`,
-      JSON.stringify(actualOutput, null, 2)
+      JSON.stringify(actualOutput, null, 2),
     );
     testOutputFiles.push(
-      `${testOutputDir}/${transformationHandleName}_output.json`
+      `${testOutputDir}/${transformationHandleName}_output.json`,
     );
 
     if (
       !transformationDict[transformerVersionID].hasOwnProperty(
-        "expected-output"
+        "expected-output",
       )
     ) {
       continue;
@@ -230,19 +230,19 @@ async function compareOutput(successResults, transformationDict) {
 
     if (!isEqual(expectedOutput, actualOutput)) {
       core.info(
-        `Test output do not match for transformation: ${transformationName}`
+        `Test output do not match for transformation: ${transformationName}`,
       );
       outputMismatchResults.push(
-        `Test output do not match for transformation: ${transformationName}`
+        `Test output do not match for transformation: ${transformationName}`,
       );
 
       fs.writeFileSync(
         `${testOutputDir}/${transformationHandleName}_diff.json`,
-        JSON.stringify(detailedDiff(expectedOutput, actualOutput), null, 2)
+        JSON.stringify(detailedDiff(expectedOutput, actualOutput), null, 2),
       );
 
       testOutputFiles.push(
-        `${testOutputDir}/${transformationHandleName}_diff.json`
+        `${testOutputDir}/${transformationHandleName}_diff.json`,
       );
     }
   }
@@ -258,12 +258,12 @@ async function uploadTestArtifacts(testOutputFiles) {
   const artifactClientResponse = await artifactClient.uploadArtifact(
     "transformer-test-results",
     testOutputFiles,
-    "."
+    ".",
   );
 
   if (artifactClientResponse.failedItems.length > 0) {
     throw new Error(
-      `Artifacts upload failed, items: ${JSON.stringify(failedItems)}`
+      `Artifacts upload failed, items: ${JSON.stringify(failedItems)}`,
     );
   }
 }
@@ -272,7 +272,7 @@ async function uploadTestArtifacts(testOutputFiles) {
 async function publishTransformation(
   transformationTest,
   librariesTest,
-  commitId
+  commitId,
 ) {
   core.info(`Publishing transformations and libraries`);
   // publish
@@ -303,8 +303,8 @@ function logResult(result) {
       }, ${result.successTestResults.length} passed and ${
         result.failedTestResults.length
       } failed\n`,
-      "yellow"
-    )
+      "yellow",
+    ),
   );
   if (result.failedTestResults.length > 0) {
     core.info(colorize("\nFailed Tests:\n", "yellow"));
@@ -318,7 +318,7 @@ function logResult(result) {
 }
 
 async function testAndPublish() {
-  core.info("Initializing");
+  core.info("Initializing test and publish");
 
   const { transformations, libraries } =
     getTransformationsAndLibrariesFromLocal();
@@ -332,14 +332,14 @@ async function testAndPublish() {
 
   const transformationDict = await upsertTransformations(
     transformations,
-    transformationNameToId
+    transformationNameToId,
   );
 
   const libraryDict = await upsertLibraries(libraries, libraryNameToId);
 
   const { transformationTest, librariesTest } = await buildTestSuite(
     transformationDict,
-    libraryDict
+    libraryDict,
   );
 
   const testSuiteResult = (
@@ -348,7 +348,7 @@ async function testAndPublish() {
 
   const { outputMismatchResults, testOutputFiles } = await compareOutput(
     testSuiteResult.successTestResults,
-    transformationDict
+    transformationDict,
   );
 
   if (uploadTestArtifact) {
