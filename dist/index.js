@@ -37334,7 +37334,7 @@ function logResult(result) {
 }
 
 async function testAndPublish() {
-  core.info("Initializing test and publish");
+  core.info("Initializing test and publish starting now");
 
   const { transformations, libraries } =
     getTransformationsAndLibrariesFromLocal();
